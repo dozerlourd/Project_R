@@ -109,6 +109,7 @@ InitTestScene*.unity*
 /*
 !/.gitignore
 !/.gitattributes
+!/AGENTS.md
 !/README.md
 !/Assets/
 !/Packages/
