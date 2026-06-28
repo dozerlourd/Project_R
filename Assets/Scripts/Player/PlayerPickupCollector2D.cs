@@ -50,7 +50,7 @@ namespace ProjectR.Player
                 return;
             }
 
-            PickupItem2D pickupItem = pickupCollider.GetComponentInParent<PickupItem2D>();
+            LootingItem2D pickupItem = pickupCollider.GetComponentInParent<LootingItem2D>();
             if (pickupItem == null || pickupItem.IsCollected)
             {
                 return;

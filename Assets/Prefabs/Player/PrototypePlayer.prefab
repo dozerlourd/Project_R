@@ -110,8 +110,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fb3570a473b4d20bdf3986e7fc36df9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 4.5
-  dashDuration: 0.12
   requireWalkableSurface: 1
   walkableLayerMask:
     serializedVersion: 2
@@ -142,6 +140,7 @@ MonoBehaviour:
   srDelayAfterDamaged: 3
   moveSpeed: 5
   dashSpeed: 15
+  dashDuration: 0.12
   maxDashCount: 1
   currentDashCount: 1
   dashCooltime: 3

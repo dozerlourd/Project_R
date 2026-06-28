@@ -200,11 +200,14 @@ Assets/
 
 - Prototype maps use `PrototypeWalkable` for floor/path trigger tilemap colliders and `PrototypeMapBounds` for blocking wall colliders.
 - Prototype player movement should require a walkable surface by default, using `PlayerMovement2D`'s walkable layer mask.
+- Player movement and dash values should come from `PlayerStats`; `PlayerMovement2D` should keep only movement execution and scene-facing movement settings.
 
 ## Item Layer Assumptions
 
 - `AutoLootingItem` is reserved for items pulled by the player's pickup magnet and collected automatically inside `pickupRadius`.
 - `ManiacLootingItem` is reserved for items that are not pulled by the pickup magnet and must be directly picked up or equipped by the player.
+- Temporary stat buff looting items should select buff targets in `StatBuffLootingItem2D` and apply them through `PlayerStats.ApplyTemporaryStatBuff`.
+- Permanent stat growth should change base player stat values through `PlayerStats.ApplyStatBuff`.
 
 ## Camera Follow Assumptions
 

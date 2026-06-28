@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ProjectR.Player
@@ -5,6 +6,56 @@ namespace ProjectR.Player
     [DisallowMultipleComponent]
     public sealed class PlayerStats : MonoBehaviour
     {
+        [Flags]
+        public enum StatBuffTarget
+        {
+            None = 0,
+            MaxHP = 1 << 0,
+            HrRate = 1 << 1,
+            HrTickTime = 1 << 2,
+            HrDelayAfterDamaged = 1 << 3,
+            MaxShield = 1 << 4,
+            SrRate = 1 << 5,
+            SrTickTime = 1 << 6,
+            SrDelayAfterDamaged = 1 << 7,
+            MoveSpeed = 1 << 8,
+            DashSpeed = 1 << 9,
+            DashDuration = 1 << 10,
+            MaxDashCount = 1 << 11,
+            DashCooltime = 1 << 12,
+            AttackDamage = 1 << 13,
+            AttackCooltime = 1 << 14,
+            PickupRadius = 1 << 15,
+            PickupMagnetRadius = 1 << 16,
+            MinPickupMagnetSpeed = 1 << 17,
+            MaxPickupMagnetSpeed = 1 << 18
+        }
+
+        private const int StatBuffCount = 19;
+
+        private static readonly StatBuffTarget[] AllStatBuffTargets =
+        {
+            StatBuffTarget.MaxHP,
+            StatBuffTarget.HrRate,
+            StatBuffTarget.HrTickTime,
+            StatBuffTarget.HrDelayAfterDamaged,
+            StatBuffTarget.MaxShield,
+            StatBuffTarget.SrRate,
+            StatBuffTarget.SrTickTime,
+            StatBuffTarget.SrDelayAfterDamaged,
+            StatBuffTarget.MoveSpeed,
+            StatBuffTarget.DashSpeed,
+            StatBuffTarget.DashDuration,
+            StatBuffTarget.MaxDashCount,
+            StatBuffTarget.DashCooltime,
+            StatBuffTarget.AttackDamage,
+            StatBuffTarget.AttackCooltime,
+            StatBuffTarget.PickupRadius,
+            StatBuffTarget.PickupMagnetRadius,
+            StatBuffTarget.MinPickupMagnetSpeed,
+            StatBuffTarget.MaxPickupMagnetSpeed
+        };
+
         /// <summary>Maximum health point value the player can have.</summary>
         [Header("Health")]
         [SerializeField, Min(1f)] private float maxHP = 100f;
@@ -46,6 +97,9 @@ namespace ProjectR.Player
         /// <summary>Movement speed applied while the player is dashing.</summary>
         [SerializeField, Min(0f)] private float dashSpeed = 15f;
 
+        /// <summary>Duration the player keeps moving with dashSpeed after starting a dash.</summary>
+        [SerializeField, Min(0.01f)] private float dashDuration = 0.12f;
+
         /// <summary>Maximum number of dash charges the player can store.</summary>
         [SerializeField, Min(0f)] private byte maxDashCount = 1;
 
@@ -79,47 +133,63 @@ namespace ProjectR.Player
 
         // Add new player stat variables here while the prototype is still evolving.
 
-        public float MaxHP => maxHP;
+        public float MaxHP => GetBuffedStat(StatBuffTarget.MaxHP, maxHP, 1f);
 
         public float CurrentHP => currentHP;
 
-        public float HrRate => hrRate;
+        public float HrRate => GetBuffedStat(StatBuffTarget.HrRate, hrRate, 0f);
 
-        public float HrTickTime => hrTickTime;
+        public float HrTickTime => GetBuffedStat(StatBuffTarget.HrTickTime, hrTickTime, 0f);
 
-        public float HrDelayAfterDamaged => hrDelayAfterDamaged;
+        public float HrDelayAfterDamaged => GetBuffedStat(
+            StatBuffTarget.HrDelayAfterDamaged,
+            hrDelayAfterDamaged,
+            0f);
 
-        public float MaxShield => maxShield;
+        public float MaxShield => GetBuffedStat(StatBuffTarget.MaxShield, maxShield, 0f);
 
         public float CurrentShield => currentShield;
 
-        public float SrRate => srRate;
+        public float SrRate => GetBuffedStat(StatBuffTarget.SrRate, srRate, 0f);
 
-        public float SrTickTime => srTickTime;
+        public float SrTickTime => GetBuffedStat(StatBuffTarget.SrTickTime, srTickTime, 0f);
 
-        public float SrDelayAfterDamaged => srDelayAfterDamaged;
+        public float SrDelayAfterDamaged => GetBuffedStat(
+            StatBuffTarget.SrDelayAfterDamaged,
+            srDelayAfterDamaged,
+            0f);
 
-        public float MoveSpeed => moveSpeed * temporaryMoveSpeedMultiplier;
+        public float MoveSpeed => GetBuffedStat(StatBuffTarget.MoveSpeed, moveSpeed, 0f);
 
-        public float DashSpeed => dashSpeed;
+        public float DashSpeed => GetBuffedStat(StatBuffTarget.DashSpeed, dashSpeed, 0f);
 
-        public byte MaxDashCount => maxDashCount;
+        public float DashDuration => GetBuffedStat(StatBuffTarget.DashDuration, dashDuration, 0.01f);
+
+        public byte MaxDashCount => (byte)Mathf.Clamp(
+            Mathf.RoundToInt(GetBuffedStat(StatBuffTarget.MaxDashCount, maxDashCount, 0f)),
+            0,
+            byte.MaxValue);
 
         public byte CurrentDashCount => currentDashCount;
 
-        public float DashCooltime => dashCooltime;
+        public float DashCooltime => GetBuffedStat(StatBuffTarget.DashCooltime, dashCooltime, 0f);
 
-        public float AttackDamage => attackDamage;
+        public float AttackDamage => GetBuffedStat(StatBuffTarget.AttackDamage, attackDamage, 0f);
 
-        public float AttackCooltime => attackCooltime;
+        public float AttackCooltime => GetBuffedStat(StatBuffTarget.AttackCooltime, attackCooltime, 0f);
 
-        public float PickupRadius => pickupRadius;
+        public float PickupRadius => GetBuffedStat(StatBuffTarget.PickupRadius, pickupRadius, 0f);
 
-        public float PickupMagnetRadius => pickupMagnetRadius;
+        public float PickupMagnetRadius => GetBuffedStat(StatBuffTarget.PickupMagnetRadius, pickupMagnetRadius, 0f);
 
-        public float MinPickupMagnetSpeed => minPickupMagnetSpeed;
+        public float MinPickupMagnetSpeed => GetBuffedStat(
+            StatBuffTarget.MinPickupMagnetSpeed,
+            minPickupMagnetSpeed,
+            0f);
 
-        public float MaxPickupMagnetSpeed => maxPickupMagnetSpeed;
+        public float MaxPickupMagnetSpeed => Mathf.Max(
+            MinPickupMagnetSpeed,
+            GetBuffedStat(StatBuffTarget.MaxPickupMagnetSpeed, maxPickupMagnetSpeed, 0f));
 
         public bool IsDead => currentHP <= 0f;
 
@@ -133,12 +203,14 @@ namespace ProjectR.Player
         private float shieldRecoveryDelayTimer;
         private float dashRecoveryTimer;
         private float attackCooldownTimer;
-        private float temporaryMoveSpeedMultiplier = 1f;
-        private float temporaryMoveSpeedTimer;
+        private readonly float[] temporaryStatBuffMultipliers = new float[StatBuffCount];
+        private readonly float[] temporaryStatBuffAddValues = new float[StatBuffCount];
+        private readonly float[] temporaryStatBuffTimers = new float[StatBuffCount];
 
         private void Awake()
         {
             ClampRuntimeValues();
+            ResetTemporaryStatBuffs();
         }
 
         private void Update()
@@ -148,34 +220,35 @@ namespace ProjectR.Player
             TickShieldRecovery(deltaTime);
             TickDashRecovery(deltaTime);
             TickAttackCooldown(deltaTime);
-            TickTemporaryMoveSpeed(deltaTime);
+            TickTemporaryStatBuffs(deltaTime);
+            ClampRuntimeStateValues();
         }
 
         public void SetCurrentHealth(float value)
         {
-            currentHP = Mathf.Clamp(value, 0f, maxHP);
+            currentHP = Mathf.Clamp(value, 0f, MaxHP);
         }
 
         public void RestoreToFullHealth()
         {
-            currentHP = maxHP;
+            currentHP = MaxHP;
         }
 
         public void SetCurrentShield(float value)
         {
-            currentShield = Mathf.Clamp(value, 0f, maxShield);
+            currentShield = Mathf.Clamp(value, 0f, MaxShield);
         }
 
         public void RestoreToFullShield()
         {
-            currentShield = maxShield;
+            currentShield = MaxShield;
         }
 
         public void RestoreAll()
         {
             RestoreToFullHealth();
             RestoreToFullShield();
-            currentDashCount = maxDashCount;
+            currentDashCount = MaxDashCount;
         }
 
         public float TakeDamage(float damage)
@@ -191,7 +264,7 @@ namespace ProjectR.Player
                 float shieldDamage = Mathf.Min(currentShield, remainingDamage);
                 currentShield -= shieldDamage;
                 remainingDamage -= shieldDamage;
-                shieldRecoveryDelayTimer = srDelayAfterDamaged;
+                shieldRecoveryDelayTimer = SrDelayAfterDamaged;
                 shieldRecoveryTimer = 0f;
             }
 
@@ -200,7 +273,7 @@ namespace ProjectR.Player
             {
                 healthDamage = Mathf.Min(currentHP, remainingDamage);
                 currentHP -= healthDamage;
-                healthRecoveryDelayTimer = hrDelayAfterDamaged;
+                healthRecoveryDelayTimer = HrDelayAfterDamaged;
                 healthRecoveryTimer = 0f;
             }
 
@@ -214,7 +287,7 @@ namespace ProjectR.Player
                 return;
             }
 
-            currentHP = Mathf.Min(maxHP, currentHP + amount);
+            currentHP = Mathf.Min(MaxHP, currentHP + amount);
         }
 
         public void RecoverShield(float amount)
@@ -224,7 +297,7 @@ namespace ProjectR.Player
                 return;
             }
 
-            currentShield = Mathf.Min(maxShield, currentShield + amount);
+            currentShield = Mathf.Min(MaxShield, currentShield + amount);
         }
 
         public bool TryConsumeDash()
@@ -235,9 +308,9 @@ namespace ProjectR.Player
             }
 
             currentDashCount--;
-            if (currentDashCount < maxDashCount && dashRecoveryTimer <= 0f)
+            if (currentDashCount < MaxDashCount && dashRecoveryTimer <= 0f)
             {
-                dashRecoveryTimer = dashCooltime;
+                dashRecoveryTimer = DashCooltime;
             }
 
             return true;
@@ -245,15 +318,15 @@ namespace ProjectR.Player
 
         public void RecoverDashCharge()
         {
-            if (currentDashCount >= maxDashCount)
+            if (currentDashCount >= MaxDashCount)
             {
-                currentDashCount = maxDashCount;
+                currentDashCount = MaxDashCount;
                 dashRecoveryTimer = 0f;
                 return;
             }
 
             currentDashCount++;
-            dashRecoveryTimer = currentDashCount < maxDashCount ? dashCooltime : 0f;
+            dashRecoveryTimer = currentDashCount < MaxDashCount ? DashCooltime : 0f;
         }
 
         public bool TryStartAttackCooldown()
@@ -263,25 +336,57 @@ namespace ProjectR.Player
                 return false;
             }
 
-            attackCooldownTimer = attackCooltime;
+            attackCooldownTimer = AttackCooltime;
             return true;
         }
 
-        public void ApplyTemporaryMoveSpeedMultiplier(float multiplier, float duration)
+        public void ApplyTemporaryStatBuff(
+            StatBuffTarget targets,
+            float multiplier,
+            float addValue,
+            float duration)
         {
-            if (multiplier <= 0f || duration <= 0f)
+            if (targets == StatBuffTarget.None || multiplier <= 0f || duration <= 0f)
             {
                 return;
             }
 
-            temporaryMoveSpeedMultiplier = Mathf.Max(temporaryMoveSpeedMultiplier, multiplier);
-            temporaryMoveSpeedTimer = Mathf.Max(temporaryMoveSpeedTimer, duration);
+            foreach (StatBuffTarget target in AllStatBuffTargets)
+            {
+                if ((targets & target) == 0)
+                {
+                    continue;
+                }
+
+                int index = GetStatBuffIndex(target);
+                temporaryStatBuffMultipliers[index] = Mathf.Max(temporaryStatBuffMultipliers[index], multiplier);
+                temporaryStatBuffAddValues[index] = Mathf.Max(temporaryStatBuffAddValues[index], addValue);
+                temporaryStatBuffTimers[index] = Mathf.Max(temporaryStatBuffTimers[index], duration);
+            }
         }
 
-        public void ClearTemporaryMoveSpeedMultiplier()
+        public void ApplyStatBuff(
+            StatBuffTarget targets,
+            float multiplier,
+            float addValue)
         {
-            temporaryMoveSpeedMultiplier = 1f;
-            temporaryMoveSpeedTimer = 0f;
+            if (targets == StatBuffTarget.None || multiplier <= 0f)
+            {
+                return;
+            }
+
+            foreach (StatBuffTarget target in AllStatBuffTargets)
+            {
+                if ((targets & target) == 0)
+                {
+                    continue;
+                }
+
+                ApplyPermanentStatBuff(target, multiplier, addValue);
+            }
+
+            maxPickupMagnetSpeed = Mathf.Max(minPickupMagnetSpeed, maxPickupMagnetSpeed);
+            ClampRuntimeStateValues();
         }
 
         private void OnValidate()
@@ -292,7 +397,7 @@ namespace ProjectR.Player
 
         private void TickHealthRecovery(float deltaTime)
         {
-            if (currentHP >= maxHP || hrRate <= 0f || IsDead)
+            if (currentHP >= MaxHP || HrRate <= 0f || IsDead)
             {
                 return;
             }
@@ -303,12 +408,12 @@ namespace ProjectR.Player
                 return;
             }
 
-            RecoverHealth(CalculateRecoveryAmount(ref healthRecoveryTimer, hrTickTime, hrRate, deltaTime));
+            RecoverHealth(CalculateRecoveryAmount(ref healthRecoveryTimer, HrTickTime, HrRate, deltaTime));
         }
 
         private void TickShieldRecovery(float deltaTime)
         {
-            if (currentShield >= maxShield || srRate <= 0f)
+            if (currentShield >= MaxShield || SrRate <= 0f)
             {
                 return;
             }
@@ -319,19 +424,19 @@ namespace ProjectR.Player
                 return;
             }
 
-            RecoverShield(CalculateRecoveryAmount(ref shieldRecoveryTimer, srTickTime, srRate, deltaTime));
+            RecoverShield(CalculateRecoveryAmount(ref shieldRecoveryTimer, SrTickTime, SrRate, deltaTime));
         }
 
         private void TickDashRecovery(float deltaTime)
         {
-            if (currentDashCount >= maxDashCount)
+            if (currentDashCount >= MaxDashCount)
             {
                 return;
             }
 
-            if (dashCooltime <= 0f)
+            if (DashCooltime <= 0f)
             {
-                currentDashCount = maxDashCount;
+                currentDashCount = MaxDashCount;
                 dashRecoveryTimer = 0f;
                 return;
             }
@@ -351,17 +456,20 @@ namespace ProjectR.Player
             }
         }
 
-        private void TickTemporaryMoveSpeed(float deltaTime)
+        private void TickTemporaryStatBuffs(float deltaTime)
         {
-            if (temporaryMoveSpeedTimer <= 0f)
+            for (int i = 0; i < StatBuffCount; i++)
             {
-                return;
-            }
+                if (temporaryStatBuffTimers[i] <= 0f)
+                {
+                    continue;
+                }
 
-            temporaryMoveSpeedTimer -= deltaTime;
-            if (temporaryMoveSpeedTimer <= 0f)
-            {
-                ClearTemporaryMoveSpeedMultiplier();
+                temporaryStatBuffTimers[i] -= deltaTime;
+                if (temporaryStatBuffTimers[i] <= 0f)
+                {
+                    ClearTemporaryStatBuff(i);
+                }
             }
         }
 
@@ -382,13 +490,148 @@ namespace ProjectR.Player
             return 0f;
         }
 
+        private void ApplyPermanentStatBuff(StatBuffTarget target, float multiplier, float addValue)
+        {
+            switch (target)
+            {
+                case StatBuffTarget.MaxHP:
+                    maxHP = ApplyStatValue(maxHP, multiplier, addValue, 1f);
+                    break;
+                case StatBuffTarget.HrRate:
+                    hrRate = ApplyStatValue(hrRate, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.HrTickTime:
+                    hrTickTime = ApplyStatValue(hrTickTime, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.HrDelayAfterDamaged:
+                    hrDelayAfterDamaged = ApplyStatValue(hrDelayAfterDamaged, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.MaxShield:
+                    maxShield = ApplyStatValue(maxShield, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.SrRate:
+                    srRate = ApplyStatValue(srRate, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.SrTickTime:
+                    srTickTime = ApplyStatValue(srTickTime, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.SrDelayAfterDamaged:
+                    srDelayAfterDamaged = ApplyStatValue(srDelayAfterDamaged, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.MoveSpeed:
+                    moveSpeed = ApplyStatValue(moveSpeed, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.DashSpeed:
+                    dashSpeed = ApplyStatValue(dashSpeed, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.DashDuration:
+                    dashDuration = ApplyStatValue(dashDuration, multiplier, addValue, 0.01f);
+                    break;
+                case StatBuffTarget.MaxDashCount:
+                    maxDashCount = ApplyByteStatValue(maxDashCount, multiplier, addValue);
+                    break;
+                case StatBuffTarget.DashCooltime:
+                    dashCooltime = ApplyStatValue(dashCooltime, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.AttackDamage:
+                    attackDamage = ApplyStatValue(attackDamage, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.AttackCooltime:
+                    attackCooltime = ApplyStatValue(attackCooltime, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.PickupRadius:
+                    pickupRadius = ApplyStatValue(pickupRadius, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.PickupMagnetRadius:
+                    pickupMagnetRadius = ApplyStatValue(pickupMagnetRadius, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.MinPickupMagnetSpeed:
+                    minPickupMagnetSpeed = ApplyStatValue(minPickupMagnetSpeed, multiplier, addValue, 0f);
+                    break;
+                case StatBuffTarget.MaxPickupMagnetSpeed:
+                    maxPickupMagnetSpeed = ApplyStatValue(maxPickupMagnetSpeed, multiplier, addValue, 0f);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(target), target, null);
+            }
+        }
+
+        private static float ApplyStatValue(float value, float multiplier, float addValue, float minValue)
+        {
+            return Mathf.Max(minValue, value * multiplier + addValue);
+        }
+
+        private static byte ApplyByteStatValue(byte value, float multiplier, float addValue)
+        {
+            return (byte)Mathf.Clamp(
+                Mathf.RoundToInt(ApplyStatValue(value, multiplier, addValue, 0f)),
+                0,
+                byte.MaxValue);
+        }
+
         private void ClampRuntimeValues()
         {
             maxHP = Mathf.Max(1f, maxHP);
-            currentHP = Mathf.Clamp(currentHP, 0f, maxHP);
-            currentShield = Mathf.Clamp(currentShield, 0f, maxShield);
-            currentDashCount = (byte)Mathf.Clamp(currentDashCount, 0, maxDashCount);
-            temporaryMoveSpeedMultiplier = Mathf.Max(1f, temporaryMoveSpeedMultiplier);
+            dashDuration = Mathf.Max(0.01f, dashDuration);
+            currentHP = Mathf.Clamp(currentHP, 0f, MaxHP);
+            currentShield = Mathf.Clamp(currentShield, 0f, MaxShield);
+            currentDashCount = (byte)Mathf.Clamp(currentDashCount, 0, MaxDashCount);
+        }
+
+        private void ClampRuntimeStateValues()
+        {
+            currentHP = Mathf.Min(currentHP, MaxHP);
+            currentShield = Mathf.Min(currentShield, MaxShield);
+            currentDashCount = (byte)Mathf.Clamp(currentDashCount, 0, MaxDashCount);
+        }
+
+        private float GetBuffedStat(StatBuffTarget target, float baseValue, float minValue)
+        {
+            int index = GetStatBuffIndex(target);
+            float multiplier = temporaryStatBuffMultipliers[index] > 0f ? temporaryStatBuffMultipliers[index] : 1f;
+            return Mathf.Max(minValue, baseValue * multiplier + temporaryStatBuffAddValues[index]);
+        }
+
+        private static int GetStatBuffIndex(StatBuffTarget target)
+        {
+            return target switch
+            {
+                StatBuffTarget.MaxHP => 0,
+                StatBuffTarget.HrRate => 1,
+                StatBuffTarget.HrTickTime => 2,
+                StatBuffTarget.HrDelayAfterDamaged => 3,
+                StatBuffTarget.MaxShield => 4,
+                StatBuffTarget.SrRate => 5,
+                StatBuffTarget.SrTickTime => 6,
+                StatBuffTarget.SrDelayAfterDamaged => 7,
+                StatBuffTarget.MoveSpeed => 8,
+                StatBuffTarget.DashSpeed => 9,
+                StatBuffTarget.DashDuration => 10,
+                StatBuffTarget.MaxDashCount => 11,
+                StatBuffTarget.DashCooltime => 12,
+                StatBuffTarget.AttackDamage => 13,
+                StatBuffTarget.AttackCooltime => 14,
+                StatBuffTarget.PickupRadius => 15,
+                StatBuffTarget.PickupMagnetRadius => 16,
+                StatBuffTarget.MinPickupMagnetSpeed => 17,
+                StatBuffTarget.MaxPickupMagnetSpeed => 18,
+                _ => throw new ArgumentOutOfRangeException(nameof(target), target, null)
+            };
+        }
+
+        private void ResetTemporaryStatBuffs()
+        {
+            for (int i = 0; i < StatBuffCount; i++)
+            {
+                ClearTemporaryStatBuff(i);
+            }
+        }
+
+        private void ClearTemporaryStatBuff(int index)
+        {
+            temporaryStatBuffMultipliers[index] = 1f;
+            temporaryStatBuffAddValues[index] = 0f;
+            temporaryStatBuffTimers[index] = 0f;
         }
     }
 }

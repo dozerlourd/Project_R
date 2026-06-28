@@ -5,11 +5,10 @@ namespace ProjectR.Player
 {
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(CapsuleCollider2D))]
+    [RequireComponent(typeof(PlayerStats))]
     [DisallowMultipleComponent]
     public sealed class PlayerMovement2D : MonoBehaviour
     {
-        [SerializeField, Min(0f)] private float moveSpeed = 4.5f;
-        [SerializeField, Min(0.01f)] private float dashDuration = 0.12f;
         [SerializeField] private bool requireWalkableSurface = true;
         [SerializeField] private LayerMask walkableLayerMask = 1 << 9;
         [SerializeField, Min(0.01f)] private float walkableCheckRadius = 0.08f;
@@ -28,7 +27,7 @@ namespace ProjectR.Player
 
         private void Awake()
         {
-            stats = GetComponent<PlayerStats>();
+            stats = GetOrAddComponent<PlayerStats>();
             body = GetOrAddComponent<Rigidbody2D>();
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
             ConfigureWalkableFilter();
@@ -145,12 +144,12 @@ namespace ProjectR.Player
 
         private float GetMoveSpeed()
         {
-            return stats != null ? stats.MoveSpeed : moveSpeed;
+            return stats.MoveSpeed;
         }
 
         private float GetDashSpeed()
         {
-            return stats != null ? stats.DashSpeed : moveSpeed;
+            return stats.DashSpeed;
         }
 
         private void TryStartDash()
@@ -161,13 +160,13 @@ namespace ProjectR.Player
             }
 
             dashRequested = false;
-            if (stats == null || !stats.TryConsumeDash())
+            if (!stats.TryConsumeDash())
             {
                 return;
             }
 
             dashDirection = moveInput.sqrMagnitude > 0.0001f ? moveInput.normalized : lastMoveDirection;
-            dashTimeRemaining = dashDuration;
+            dashTimeRemaining = stats.DashDuration;
         }
 
         private void TryMove(Vector2 displacement)

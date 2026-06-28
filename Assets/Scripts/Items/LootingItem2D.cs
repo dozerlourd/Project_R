@@ -5,14 +5,14 @@ namespace ProjectR.Items
 {
     [RequireComponent(typeof(Collider2D))]
     [DisallowMultipleComponent]
-    public sealed class PickupItem2D : MonoBehaviour
+    public sealed class LootingItem2D : MonoBehaviour
     {
         [SerializeField] private bool deactivateOnCollected = true;
 
         private Transform cachedTransform;
         private bool isCollected;
 
-        public event Action<PickupItem2D, GameObject> Collected;
+        public event Action<LootingItem2D, GameObject> Collected;
 
         public bool IsCollected => isCollected;
 
