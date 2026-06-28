@@ -20,9 +20,8 @@
   - `Packages`: Unity 패키지 의존성.
   - `ProjectSettings`: Unity 프로젝트 설정.
 - 현재 확인된 개발 씬:
-  - `Assets/Scenes/Scene_1_CharactorDev.unity`: 캐릭터/플레이어 개발용 씬. 이름의 오탈자는 기존 파일명을 존중한다.
-  - `Assets/Scenes/Scene_2_MapDev.unity`: 맵, 타일, 방 생성 개발용 씬.
-  - `Assets/Scenes/Scene_3_ItemDev.unity`: 아이템, 드랍, 장비/강화 개발용 씬.
+  - `Assets/Scenes/Scene_1_InteractionDev.unity`: 플레이어, 아이템, 상호작용 개발용 씬.
+  - `Assets/Scenes/Scene_2_MapEdit.unity`: 맵, 타일, 방 생성 개발용 씬.
   - `Assets/Scenes/Scene_4_FinalDev.unity`: 기능 통합 및 최종 플레이 흐름 개발용 씬.
 
 ## 게임 핵심 방향
@@ -195,6 +194,7 @@ Assets/
 - 프로젝트의 공통 전제가 바뀌면 이 문서를 함께 갱신한다.
 - 단일 기능의 세부 구현 기록은 별도 문서로 분리해도 된다.
 - 새 Codex 스레드에 전달해야 하는 내용은 이 문서에 짧게라도 남긴다.
+- 커밋하거나 푸시할 때는 `Assets/Docs/Commit_Message_Guide.md`의 커밋 메시지 작성 규칙을 따른다.
 
 ## Prototype Movement Assumptions
 

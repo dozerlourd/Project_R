@@ -5,13 +5,15 @@ Before starting any work in this repository, every Codex session must read:
 - `Assets/Docs/Codex_Project_Brief.md`
 
 Treat that file as the shared project brief for all future work in this Unity project.
+When creating commits or pushing work, follow `Assets/Docs/Commit_Message_Guide.md`.
 
 ## Required Startup Routine
 
 1. Read `Assets/Docs/Codex_Project_Brief.md`.
 2. Identify which system, workflow, or development principle from the brief applies to the user's current request.
 3. Inspect the relevant Unity scene, `Packages/manifest.json`, and `Assets` structure when needed.
-4. If the requested work conflicts with the brief, briefly tell the user what conflicts before making changes.
+4. Before committing or pushing, read `Assets/Docs/Commit_Message_Guide.md` and write the commit message from that guide.
+5. If the requested work conflicts with the brief, briefly tell the user what conflicts before making changes.
 
 ## Project Defaults
 

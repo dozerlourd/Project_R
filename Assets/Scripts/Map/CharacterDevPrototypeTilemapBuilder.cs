@@ -162,29 +162,26 @@ namespace ProjectR.Map
         private void RequestRebuild()
         {
 #if UNITY_EDITOR
-            if (!Application.isPlaying)
+            if (rebuildQueued)
             {
-                if (rebuildQueued)
+                return;
+            }
+
+            rebuildQueued = true;
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (this == null)
                 {
                     return;
                 }
 
-                rebuildQueued = true;
-                UnityEditor.EditorApplication.delayCall += () =>
-                {
-                    if (this == null)
-                    {
-                        return;
-                    }
-
-                    rebuildQueued = false;
-                    Rebuild();
-                };
-                return;
-            }
-#endif
-
+                rebuildQueued = false;
+                Rebuild();
+            };
+            return;
+#else
             Rebuild();
+#endif
         }
 
         private static void DestroyComponent(Component component)
